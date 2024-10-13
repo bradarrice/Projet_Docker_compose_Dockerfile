@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  php:
+    image: php:8.2-apache
+    container_name: php82
+    ports:
+      - 8000:80
+    volumes:
+      - ./php:/var/www/html
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - db   # PHP attend que MySQL soit démarré
+    networks:
+      - app-network  # Utilisation du même réseau
+
+  db:
+    image: mysql:8.0
+    container_name: msql8
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: pass
+      MYSQL_DATABASE: demo
+      MYSQL_USER: demo
+      MYSQL_PASSWORD: pass
+    ports:
+      - 3307:3306
+    networks:
+      - app-network  # Utilisation du même réseau
+
+  phpma:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpma
+    environment:
+      PMA_ARBITRARY: 1
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: pass
+      UPLOAD_LIMIT: 20M
+    ports:
+      - 8890:80
+    depends_on:
+      - db   # phpMyAdmin dépend de MySQL
+    networks:
+      - app-network  # Utilisation du même réseau
+
+networks:
+  app-network:  # Définition du réseau commun
+    driver: bridge
